@@ -63,26 +63,51 @@ def decode(data):
             res+= part[0].decode(part[1])
     return "".join(res.split())
 
-def get_subject(num,imap):
-    res, data = imap.fetch(num,'BODY.PEEK[HEADER.FIELDS (SUBJECT)]')
+def get_subject(num):
+    global im
+    res, data = im.fetch(num,'BODY.PEEK[HEADER.FIELDS (SUBJECT)]')
     x,y = data[0]
     y=force_decode(y)
     y=y[9:]
     return decode(y)
 
+def get_mail(num):
+    global im
+    _,data = im.fetch(num,'(RFC822)')
+    eml=email.message_from_bytes(data[0][1])
+    return eml
+
+def delete_mail(num):
+    global im
+    im.store(num, '+FLAGS', '\\Deleted')
+    im.expunge()
+
+def search_mails(key,value):
+    global im
+    _, nums = im.search(None,key,'"{}"'.format(value))
+    return nums[0].split():
+
+
+
 def main():
+    global config
+    global im
     config=get_config()
     im=imaplib.IMAP4_SSL(config["SERVER"]["host"],config["SERVER"]["port"])
-    # im=imaplib.IMAP4_SSL(imap_url,imap_port)
     im.login(config["CREDENTIALS"]["username"],config["CREDENTIALS"]["password"])
     im.select(config["SERVER"]["mailbox"])
 
 
     typ, nums = im.search(None, 'ALL')
     for n in nums[0].split():
-        print(get_subject(n, im))
+        subject_line=get_subject(n)
+        if not "MARVIN" in subject_line:
+            print(subject_line)
+            m=get_mail(n)
+            # print(m.)
 
     im.close()
     im.logout()
 
-main()
+if __name__ == "__main__":
+    main()
