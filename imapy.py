@@ -4,7 +4,14 @@ from email.header import decode_header
 import re
 import os
 from configparser import ConfigParser
+from cursesmenu import *
+from cursesmenu.items import *
+
 config_file_path=os.path.join(os.path.expanduser('~'),"imap_virus_marvin.ini")
+
+
+def edit(num):
+    pass
 
 def get_config():
     if not os.path.isfile(config_file_path):
@@ -73,9 +80,12 @@ def get_subject(num):
 
 def get_mail(num):
     global im
-    _,data = im.fetch(num,'(RFC822)')
-    eml=email.message_from_bytes(data[0][1])
-    return eml
+    res, data = im.fetch(num,'(RFC822)')
+    try:
+        eml=email.message_from_bytes(data[0][1])
+        return eml
+    except:
+        return None
 
 def delete_mail(num):
     global im
@@ -85,9 +95,11 @@ def delete_mail(num):
 def search_mails(key,value):
     global im
     _, nums = im.search(None,key,'"{}"'.format(value))
-    return nums[0].split():
+    return nums[0].split()
 
-
+def print_mail(num):
+    eml=get_mail(num)
+    input("test")
 
 def main():
     global config
@@ -97,14 +109,29 @@ def main():
     im.login(config["CREDENTIALS"]["username"],config["CREDENTIALS"]["password"])
     im.select(config["SERVER"]["mailbox"])
 
+    # Create the menu
+    menu = CursesMenu("Mails - INBOX", "0 - 10")
+
+    # selection_menu = SelectionMenu(["item1", "item2", "item3"])
+    # submenu_item = SubmenuItem("Submenu item", selection_menu, menu)
+
+    # Once we're done creating them, we just add the items to the menu
+    # menu.append_item(submenu_item)
+
+    # Finally, we call show to show the menu and allow the user to interact
 
     typ, nums = im.search(None, 'ALL')
     for n in nums[0].split():
         subject_line=get_subject(n)
         if not "MARVIN" in subject_line:
-            print(subject_line)
-            m=get_mail(n)
+            function_item = FunctionItem(subject_line, print_mail , [n] ,should_exit=True)
+            menu.append_item(function_item)
+
+            # print(subject_line)
+            # m=get_mail(n)
             # print(m.)
+
+    menu.show()
 
     im.close()
     im.logout()
