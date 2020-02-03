@@ -3,12 +3,13 @@ from pprint import pprint as pp
 from email.header import decode_header
 import re
 import os
+import time
 from configparser import ConfigParser
 from cursesmenu import *
 from cursesmenu.items import *
-
+import dialog
 config_file_path=os.path.join(os.path.expanduser('~'),"imap_virus_marvin.ini")
-
+dialog=dialog.Dialog()
 
 def edit(num):
     pass
@@ -99,7 +100,36 @@ def search_mails(key,value):
 
 def print_mail(num):
     eml=get_mail(num)
-    input("test")
+    dialogit(str(eml))
+    # dialogit(eml['Subject'])
+
+def edit_mail(num):
+    global im
+    global config
+    eml=get_mail(num)
+    a,b=dialog.inputbox("Edit Subject",init=eml['Subject'])
+    eml.replace_header('Subject',b)
+    # dialogit(str(eml))
+    # c.append('INBOX', '', imaplib.Time2Internaldate(time.time()), str(new_message))
+    print(type(str(eml)))
+    c,d = im.append('INBOX','', imaplib.Time2Internaldate(time.time()),str(eml).encode('utf-8'))
+    print(c)
+    print(d)
+    # c= OK
+    # d= [b'[APPENDUID 1252405521 2655] APPEND Ok.']
+    # if append ok delete original mailbox
+    # delete mail
+
+
+
+
+
+def quit():
+    exit(0)
+
+def dialogit(text):
+    # d.msgbox(text)
+    dialog.scrollbox(text,height=60,width=110)
 
 def main():
     global config
@@ -112,26 +142,21 @@ def main():
     # Create the menu
     menu = CursesMenu("Mails - INBOX", "0 - 10")
 
-    # selection_menu = SelectionMenu(["item1", "item2", "item3"])
-    # submenu_item = SubmenuItem("Submenu item", selection_menu, menu)
-
-    # Once we're done creating them, we just add the items to the menu
-    # menu.append_item(submenu_item)
-
-    # Finally, we call show to show the menu and allow the user to interact
-
     typ, nums = im.search(None, 'ALL')
     for n in nums[0].split():
         subject_line=get_subject(n)
         if not "MARVIN" in subject_line:
-            function_item = FunctionItem(subject_line, print_mail , [n] ,should_exit=True)
+            function_item = FunctionItem(subject_line, edit_mail , [n] ,should_exit=True)
             menu.append_item(function_item)
 
             # print(subject_line)
             # m=get_mail(n)
             # print(m.)
+    # menu.append_item(FunctionItem("QUIT",quit,should_exit=True))
+    returnval=menu.show()
 
-    menu.show()
+
+
 
     im.close()
     im.logout()
