@@ -8,8 +8,10 @@ from configparser import ConfigParser
 from cursesmenu import *
 from cursesmenu.items import *
 import dialog
-config_file_path=os.path.join(os.path.expanduser('~'),"imap_virus_marvin.ini")
+config_file_path=os.path.join(os.path.expanduser('~'),".imap_virus_marvin.ini")
 dialog=dialog.Dialog()
+# dialog.set_background_title("IMAP-Mail-Renamer")
+marvin_pattern=re.compile('MARVIN#\d{14}_')
 
 def edit(num):
     pass
@@ -101,34 +103,27 @@ def search_mails(key,value):
 def print_mail(num):
     eml=get_mail(num)
     dialogit(str(eml))
-    # dialogit(eml['Subject'])
 
 def edit_mail(num):
     global im
     global config
     eml=get_mail(num)
-    a,b=dialog.inputbox("Edit Subject",init=eml['Subject'])
-    eml.replace_header('Subject',b)
-    # dialogit(str(eml))
-    # c.append('INBOX', '', imaplib.Time2Internaldate(time.time()), str(new_message))
-    print(type(str(eml)))
-    c,d = im.append('INBOX','', imaplib.Time2Internaldate(time.time()),str(eml).encode('utf-8'))
-    print(c)
-    print(d)
-    # c= OK
-    # d= [b'[APPENDUID 1252405521 2655] APPEND Ok.']
-    # if append ok delete original mailbox
-    # delete mail
-
-
-
-
+    old_subject=eml['Subject']
+    action,new_subject=dialog.inputbox("Edit Subject",init=old_subject)
+    if action == "OK":
+        eml.replace_header('Subject',new_subject)
+        # c.append('INBOX', '', imaplib.Time2Internaldate(time.time()), str(new_message))
+        c,d = im.append('INBOX','', imaplib.Time2Internaldate(time.time()),str(eml).encode('utf-8'))
+        # c= OK
+        # d= [b'[APPENDUID 1252405521 2655] APPEND Ok.']
+        # if append ok delete original mailbox
+        if "OK" in c:
+            delete_mail(num)
 
 def quit():
     exit(0)
 
 def dialogit(text):
-    # d.msgbox(text)
     dialog.scrollbox(text,height=60,width=110)
 
 def main():
@@ -145,14 +140,9 @@ def main():
     typ, nums = im.search(None, 'ALL')
     for n in nums[0].split():
         subject_line=get_subject(n)
-        if not "MARVIN" in subject_line:
+        if not marvin_pattern.match(subject_line):
             function_item = FunctionItem(subject_line, edit_mail , [n] ,should_exit=True)
             menu.append_item(function_item)
-
-            # print(subject_line)
-            # m=get_mail(n)
-            # print(m.)
-    # menu.append_item(FunctionItem("QUIT",quit,should_exit=True))
     returnval=menu.show()
 
 
