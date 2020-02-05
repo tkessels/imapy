@@ -12,7 +12,7 @@ config_file_path=os.path.join(os.path.expanduser('~'),".imap_virus_marvin.ini")
 dialog=dialog.Dialog()
 dialog.set_background_title("IMAP-Mail-Renamer")
 marvin_pattern=re.compile('MARVIN\d{14}_')
-marvin_candidates=re.compile('(([mM][aA][rR][vV][iI][nN].{0,3})?\d{14})')
+marvin_candidates=re.compile('(?:[mM][aA][rR][vV][iI][nN].{0,3})?(\d{14})')
 
 def edit(num):
     pass
@@ -119,33 +119,36 @@ def print_mail(num):
     dialogit(str(eml))
 
 def scan_for_marvins(eml):
-    results=marvin_candidates.findall(eml.as_string())
+    texttosearch="\n".join(get_header(eml,'Subject'))
+    for part in eml.walk():
+        if 'text/plain' == part.get_content_type():
+            texttosearch+="\n"+force_decode(part.get_payload(decode=True))
+    results=marvin_candidates.findall(texttosearch)
     ergebnisse=[]
     for x in results:
-        if x[0] not in ergebnisse:
-            ergebnisse.append(x[0])
+        if x not in ergebnisse:
+            ergebnisse.append(x)
     return ergebnisse
 
 def edit_mail(num):
     global im
     global config
     eml=get_mail(num)
-    old_subject=get_header(eml,'Subject')
+    old_subject=get_header(eml,'Subject')[0]
     results=scan_for_marvins(eml)
     suggesttext="Found {} possible marvins".format(len(results))
     suggesttext+="\n"
     suggesttext+="\n".join(results)
-    dialog.msgbox(suggesttext,width=110)
-
-    # action,new_subject=dialog.inputbox(suggesttext,init=old_subject)
-    # if action == "OK":
-    #     eml.replace_header('Subject',new_subject)
-    #     c,d = im.append('INBOX','', imaplib.Time2Internaldate(time.time()),str(eml).encode('utf-8'))
-    #     # c= OK
-    #     # d= [b'[APPENDUID 1252405521 2655] APPEND Ok.']
-    #     # if append ok delete original mailbox
-    #     if "OK" in c:
-    #         delete_mail(num)
+    suggestes_subject="MARVIN#{}_{}".format(results[0],old_subject)
+    action,new_subject=dialog.inputbox(suggesttext,init=suggestes_subject,height=30,width=110)
+    if action == "OK":
+        eml.replace_header('Subject',new_subject)
+        c,d = im.append('INBOX','', imaplib.Time2Internaldate(time.time()),str(eml).encode('utf-8'))
+        # c= OK
+        # d= [b'[APPENDUID 1252405521 2655] APPEND Ok.']
+        # if append ok delete original mailbox
+        if "OK" in c:
+            delete_mail(num)
 
 def quit():
     exit(0)
@@ -179,8 +182,8 @@ def make_choice():
     im.logout()
 
 def main():
-    f=open('testmail','rb')
-    eml=email.message_from_binary_file(f)
+    # f=open('testmail','rb')
+    # eml=email.message_from_binary_file(f)
     # dialogit("\n".join(scan_for_marvins(eml)))
     make_choice()
 
