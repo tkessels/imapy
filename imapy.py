@@ -139,9 +139,14 @@ def edit_mail(num):
     suggesttext="Found {} possible marvins".format(len(results))
     suggesttext+="\n"
     suggesttext+="\n".join(results)
-    suggestes_subject="MARVIN#{}_{}".format(results[0],old_subject)
-    action,new_subject=dialog.inputbox(suggesttext,init=suggestes_subject,height=30,width=110)
-    if action == "OK":
+    if len(results)>0:
+        suggested_subject="MARVIN#{}_{}".format(results[0],old_subject)
+    else:
+        suggested_subject="MARVIN#2020xxxx75xxxx_{}".format(old_subject)
+    action,new_subject=dialog.inputbox(suggesttext,init=suggested_subject,height=30,width=110)
+    print(action)
+    time.sleep(2)
+    if action == "ok":
         eml.replace_header('Subject',new_subject)
         c,d = im.append('INBOX','', imaplib.Time2Internaldate(time.time()),str(eml).encode('utf-8'))
         # c= OK
