@@ -19,7 +19,6 @@ def edit(num):
 
 def get_config():
     if not os.path.isfile(config_file_path):
-        #write default config and exit
         config_instance = ConfigParser()
         config_instance["CREDENTIALS"] = {
             "username": "virus-user",
@@ -56,7 +55,6 @@ def get_header(eml, string):
     return ergebnisse
 
 
-    #aaaah das mit dem decoden und dann die liste anlegen und dann das ergebniss zurückgeben.... irgendwas mit a und auch wenn nicht encoded einfach so zurückgeben genau!
 
 def force_decode(string, codecs=['utf8', 'cp1252']):
     if isinstance(string, str):
@@ -149,9 +147,6 @@ def edit_mail(num):
     if action == "ok":
         eml.replace_header('Subject',new_subject)
         c,d = im.append('INBOX','', imaplib.Time2Internaldate(time.time()),str(eml).encode('utf-8'))
-        # c= OK
-        # d= [b'[APPENDUID 1252405521 2655] APPEND Ok.']
-        # if append ok delete original mailbox
         if "OK" in c:
             delete_mail(num)
 
@@ -171,25 +166,18 @@ def make_choice():
 
     # Create the menu
     menu = CursesMenu("Mails - INBOX", "0 - 10")
-
     typ, nums = im.search(None, 'ALL')
     for n in nums[0].split():
         subject_line=get_subject(n)
         if not marvin_pattern.match(subject_line):
             function_item = FunctionItem(subject_line, edit_mail , [n] ,should_exit=True)
             menu.append_item(function_item)
+
     menu.show()
-
-
-
-
     im.close()
     im.logout()
 
 def main():
-    # f=open('testmail','rb')
-    # eml=email.message_from_binary_file(f)
-    # dialogit("\n".join(scan_for_marvins(eml)))
     make_choice()
 
 
