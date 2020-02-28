@@ -84,14 +84,21 @@ def decode(data):
             res+= part[0].decode(part[1])
     return "".join(res.split())
 
+def retrieve(num,field):
+    global im
+    res, data = im.fetch(num,"BODY.PEEK[HEADER.FIELDS ({})]".format(field))
+    x,y = data[0]
+    y=force_decode(y)
+    y=y.split(":",1)
+    y=y[1]
+    return decode(y)
 
 def get_subject(num):
     global im
-    res, data = im.fetch(num,'BODY.PEEK[HEADER.FIELDS (SUBJECT)]')
-    x,y = data[0]
-    y=force_decode(y)
-    y=y[9:]
-    return decode(y)
+    # res, data2 = im.fetch(num,'BODY.PEEK[HEADER.FIELDS (FROM)]')
+    y=retrieve(num,"SUBJECT")
+    z=retrieve(num,"FROM")
+    return "{} von <{}>".format(y,z)
 
 def get_mail(num):
     global im
