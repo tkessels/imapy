@@ -9,11 +9,8 @@ from cursesmenu import *
 from cursesmenu.items import *
 from dialog import *
 import dialog
-config_file_path=os.path.join(os.path.expanduser('~'),".imap_virus_marvin.ini")
-dialog=dialog.Dialog()
-dialog.set_background_title("IMAP-Mail-Renamer")
-marvin_pattern=re.compile('MARVIN\d{14}_')
-marvin_candidates=re.compile('(?:[mM][aA][rR][vV][iI][nN].{0,3})?(\d{14})')
+
+
 
 def edit(num):
     pass
@@ -186,6 +183,15 @@ def make_choice():
     im.logout()
 
 def main():
+    global config_file_path
+    config_file_path=os.path.join(os.path.expanduser('~'),".imap_virus_marvin.ini")
+    global dialog
+    dialog=Dialog()
+    dialog.set_background_title("IMAP-Mail-Renamer")
+    global marvin_pattern
+    marvin_pattern=re.compile('MARVIN\d{14}_')
+    global marvin_candidates
+    marvin_candidates=re.compile('(?:[mM][aA][rR][vV][iI][nN].{0,3})?(\d{14})')
     make_choice()
 
 
