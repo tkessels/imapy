@@ -7,6 +7,7 @@ import time
 from configparser import ConfigParser
 from cursesmenu import *
 from cursesmenu.items import *
+from dialog import *
 import dialog
 config_file_path=os.path.join(os.path.expanduser('~'),".imap_virus_marvin.ini")
 dialog=dialog.Dialog()
@@ -191,4 +192,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ExecutableNotFound:
+        print("Dialog binary not found")
+        print("try: sudo apt install dialog")
