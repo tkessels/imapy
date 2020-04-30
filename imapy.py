@@ -9,6 +9,84 @@ from cursesmenu import *
 from cursesmenu.items import *
 from dialog import *
 import dialog
+import functools
+
+class ImapConnector:
+    def __init__(self,host:str,port:str,username:str,password:str):
+        self.imapserver=imaplib.IMAP4_SSL(host,port)
+        self.imapserver.login(username,password)
+
+    def __del__(self):
+        self.imapserver.close()
+        self.imapserver.logout()
+
+    def select(self,folder:str):
+        self.imapserver.select(folder)
+
+    def search(self, *args):
+        return self.imapserver.search(*args)
+
+    def delete_mail(self,num):
+        self.imapserver.store(num, '+FLAGS', '\\Deleted')
+        self.imapserver.expunge()
+
+    # @functools.lru_cache()
+    def get_mail(self,num):
+        res, data = self.imapserver.fetch(num,'(RFC822)')
+        try:
+            eml=email.message_from_bytes(data[0][1])
+            return eml
+        except:
+            return None
+
+    def get_header(eml:email, string:str):
+        a=email.header.decode_header(eml[string])
+        ergebnisse=[]
+        for eintrag in a:
+            ergebnisse.append(force_decode(eintrag[0]))
+        return ergebnisse
+
+    def force_decode(self, string, codecs=['utf8', 'cp1252']):
+        if isinstance(string, str):
+            return string
+        for i in codecs:
+            try:
+                return string.decode(i)
+            except UnicodeDecodeError:
+                pass
+        raise Exception("Could not decode")
+
+    def decode(self, data):
+        if isinstance(data,bytes):
+            data=self.force_decode(data)
+        tmp=email.header.decode_header(data)
+        res=""
+        for part in tmp:
+            if part[1]==None:
+                if isinstance(part[0],str):
+                    res+= part[0]
+                else:
+                    try:
+                        res+= part[0].decode('ascii')
+                    except:
+                        print(part[0])
+            else:
+                res+= part[0].decode(part[1])
+        return "".join(res.split())
+
+    def retrieve(self,num,field):
+        res, data = self.imapserver.fetch(num,"BODY.PEEK[HEADER.FIELDS ({})]".format(field))
+        x,y = data[0]
+        y=force_decode(y)
+        y=y.split(":",1)
+        y=y[1]
+        return decode(y)
+
+    def get_subject(self,num):
+        y=self.retrieve(num,"SUBJECT")
+        z=self.retrieve(num,"FROM")
+        return "{} von <{}>".format(y,z)
+
 
 
 def get_config():
@@ -41,7 +119,7 @@ def get_config():
         else:
             return config_instance
 
-def get_header(eml, string):
+def get_header(eml:email, string:str):
     a=email.header.decode_header(eml[string])
     ergebnisse=[]
     for eintrag in a:
@@ -63,7 +141,7 @@ def force_decode(string, codecs=['utf8', 'cp1252']):
 def decode(data):
     if isinstance(data,bytes):
         data=force_decode(data)
-    tmp=decode_header(data)
+    tmp=email.header.decode_header(data)
     res=""
     for part in tmp:
         if part[1]==None:
@@ -108,6 +186,8 @@ def delete_mail(num):
     im.store(num, '+FLAGS', '\\Deleted')
     im.expunge()
 
+
+
 def search_mails(key,value):
     global im
     _, nums = im.search(None,key,'"{}"'.format(value))
@@ -118,6 +198,7 @@ def print_mail(num):
     dialogit(str(eml))
 
 def scan_for_marvins(eml):
+    """Scrape email body for matches of regular expression-pattern"""
     texttosearch="\n".join(get_header(eml,'Subject'))
     for part in eml.walk():
         if 'text/plain' == part.get_content_type():
@@ -188,7 +269,18 @@ def main():
     marvin_pattern=re.compile('MARVIN#\d{14}_')
     global marvin_candidates
     marvin_candidates=re.compile('(?:[mM][aA][rR][vV][iI][nN].{0,3})?(\d{14})')
-    make_choice()
+    config=get_config()
+    connection=ImapConnector(config["SERVER"]["host"],config["SERVER"]["port"],config["CREDENTIALS"]["username"],config["CREDENTIALS"]["password"])
+    connection.select(config["SERVER"]["mailbox"])
+
+
+    typ, nums = connection.search(None, 'ALL')
+    print(len(nums))
+    for n in nums[0].split():
+        subject_line=connection.get_subject(n)
+        print(subject_line)
+
+    # make_choice()
 
 
 
