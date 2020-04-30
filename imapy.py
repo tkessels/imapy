@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import imaplib, email
 from pprint import pprint as pp
 from email.header import decode_header
