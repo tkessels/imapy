@@ -12,10 +12,6 @@ from dialog import *
 import dialog
 
 
-
-def edit(num):
-    pass
-
 def get_config():
     if not os.path.isfile(config_file_path):
         config_instance = ConfigParser()
