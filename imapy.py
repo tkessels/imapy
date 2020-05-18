@@ -224,8 +224,6 @@ def edit_mail(num):
     else:
         suggested_subject="MARVIN#2020xxxx75xxxx_{}".format(old_subject)
     action,new_subject=dialog.inputbox(suggesttext,init=suggested_subject,height=30,width=110)
-    # print(action)
-    # time.sleep(2)
     if action == "ok":
         eml.replace_header('Subject',new_subject)
         c,d = im.append('INBOX','', imaplib.Time2Internaldate(time.time()),str(eml).encode('utf-8'))
@@ -272,15 +270,7 @@ def main():
     config=get_config()
     connection=ImapConnector(config["SERVER"]["host"],config["SERVER"]["port"],config["CREDENTIALS"]["username"],config["CREDENTIALS"]["password"])
     connection.select(config["SERVER"]["mailbox"])
-
-
-    typ, nums = connection.search(None, 'ALL')
-    print(len(nums))
-    for n in nums[0].split():
-        subject_line=connection.get_subject(n)
-        print(subject_line)
-
-    # make_choice()
+    make_choice()
 
 
 
